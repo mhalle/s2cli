@@ -8,15 +8,16 @@ from . import __version__
 from .commands import author, authors, paper, papers, recommend, search
 
 app = typer.Typer(
-    name="s2",
+    name="s2cli",
     help="Semantic Scholar CLI - Query academic papers, authors, and citations.",
     no_args_is_help=True,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Annotated[
         bool,
         typer.Option(
@@ -31,8 +32,10 @@ def main(
     All output is JSON by default. Use --format on any command to change.
     """
     if version:
-        print(f"s2 version {__version__}")
+        print(f"s2cli version {__version__}")
         raise typer.Exit()
+    if ctx.invoked_subcommand is None:
+        raise typer.Exit(ctx.get_help())
 
 
 # Register subcommands

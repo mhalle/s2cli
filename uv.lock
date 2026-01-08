@@ -166,7 +166,7 @@ wheels = [
 ]
 
 [[package]]
-name = "s2-cli"
+name = "s2cli"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

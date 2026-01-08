@@ -1,6 +1,6 @@
-# s2 - Semantic Scholar CLI
+# s2cli - Semantic Scholar CLI
 
-Query academic papers, authors, and citations from the command line.
+Unofficial command-line interface for querying academic papers, authors, and citations.
 
 ## Installation
 
@@ -12,19 +12,19 @@ uv sync
 
 ```bash
 # Search papers
-s2 search papers "transformer attention mechanism" --limit 10
+s2cli search papers "transformer attention mechanism" --limit 10
 
 # Get a specific paper
-s2 paper get arXiv:1706.03762 --fields title,abstract,tldr
+s2cli paper get arXiv:1706.03762 --fields title,abstract,tldr
 
 # Get paper citations
-s2 paper citations 10.1038/nature12373 --limit 20
+s2cli paper citations 10.1038/nature12373 --limit 20
 
 # Search authors
-s2 search authors "Geoffrey Hinton"
+s2cli search authors "Geoffrey Hinton"
 
 # Get recommendations
-s2 recommend for-paper arXiv:1706.03762 --limit 5
+s2cli recommend for-paper arXiv:1706.03762 --limit 5
 ```
 
 ## Configuration

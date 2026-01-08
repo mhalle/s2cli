@@ -1,4 +1,4 @@
-"""Authors commands - bulk author operations."""
+"""Papers commands - bulk paper operations."""
 
 import sys
 from pathlib import Path
@@ -6,10 +6,11 @@ from typing import Annotated, Optional
 
 import typer
 
-from ..client import AUTHOR_FIELDS_DEFAULT, AUTHOR_FIELDS_FULL, get_client, parse_fields
+from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields
 from ..input import parse_ids_from_stdin
 from ..options import (
-    AUTHOR_FIELDS_HELP,
+    ID_FORMATS_HELP,
+    PAPER_FIELDS_HELP,
     ApiKeyOption,
     FormatOption,
     OutputFormat,
@@ -24,16 +25,16 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command()
 def get(
-    author_ids: Annotated[
+    paper_ids: Annotated[
         Optional[list[str]],
-        typer.Argument(help="Author IDs to retrieve"),
+        typer.Argument(help=f"Paper IDs to retrieve. {ID_FORMATS_HELP}"),
     ] = None,
     file: Annotated[
         Optional[Path],
         typer.Option(
             "--file",
             "-i",
-            help="File with author IDs (one per line)",
+            help="File with paper IDs (one per line)",
         ),
     ] = None,
     stdin: Annotated[
@@ -49,41 +50,42 @@ def get(
             "--id-field",
             help="Field name to extract IDs from in JSON input",
         ),
-    ] = "authorId",
+    ] = "paperId",
     fields: Annotated[
         Optional[str],
         typer.Option(
             "--fields",
             "-F",
-            help=AUTHOR_FIELDS_HELP,
+            help=PAPER_FIELDS_HELP,
         ),
     ] = None,
     fmt: FormatOption = None,
     quiet: QuietOption = False,
     api_key: ApiKeyOption = None,
 ):
-    """Get multiple authors by ID.
+    """Get multiple papers by ID.
 
     Provide IDs as arguments, from a file, or via stdin.
 
     Stdin accepts:
     - Plain text (one ID per line)
-    - JSON array of objects with authorId field
+    - JSON array of objects with paperId field
     - JSONL (one JSON object per line)
 
     Examples:
-        s2 authors get 1741101 2059281478 --fields name,hIndex,paperCount
-        s2 authors get --file author_ids.txt
-        s2 paper get arXiv:1706.03762 --fields authors | s2 authors get --stdin
+        s2cli papers get 10.1038/nature12373 arXiv:2103.14030
+        s2cli papers get --file paper_ids.txt --fields title,year,citationCount
+        s2cli paper references arXiv:1706.03762 | s2cli papers get --stdin --fields title,abstract
+        cat ids.json | s2cli papers get --stdin --id-field doi
     """
     client = get_client(resolve_api_key(api_key))
-    field_list = parse_fields(fields, AUTHOR_FIELDS_DEFAULT, AUTHOR_FIELDS_FULL)
+    field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
     output_format = resolve_format(fmt)
 
-    # Collect all author IDs from various sources
+    # Collect all paper IDs from various sources
     ids: list[str] = []
-    if author_ids:
-        ids.extend(author_ids)
+    if paper_ids:
+        ids.extend(paper_ids)
     if file:
         if not file.exists():
             print(f"Error: File not found: {file}", file=sys.stderr)
@@ -93,7 +95,7 @@ def get(
         ids.extend(parse_ids_from_stdin(id_field))
 
     if not ids:
-        print("Error: No author IDs provided", file=sys.stderr)
+        print("Error: No paper IDs provided", file=sys.stderr)
         raise typer.Exit(2)
 
     try:
@@ -103,11 +105,11 @@ def get(
         if "externalIds" not in request_fields:
             request_fields.append("externalIds")
 
-        authors = client.get_authors(ids, fields=request_fields)
+        papers = client.get_papers(ids, fields=request_fields)
         # Filter out None results
-        authors = [a for a in authors if a]
+        papers = [p for p in papers if p]
         # Only output the fields the user requested
-        print_output(authors, fmt=output_format, fields=field_list if fields else None)
+        print_output(papers, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
             print(f"Error: {e}", file=sys.stderr)

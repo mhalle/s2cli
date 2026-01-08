@@ -101,10 +101,10 @@ def papers(
     """Search for papers by keyword/phrase.
 
     Examples:
-        s2 search papers "transformer attention mechanism" --limit 20
-        s2 search papers "CRISPR" --year 2020-2024 --min-citations 100
-        s2 search papers "climate change" --fields-of-study "Environmental Science"
-        s2 search papers "neural networks" --open-access --fields title,abstract,tldr
+        s2cli search papers "transformer attention mechanism" --limit 20
+        s2cli search papers "CRISPR" --year 2020-2024 --min-citations 100
+        s2cli search papers "climate change" --fields-of-study "Environmental Science"
+        s2cli search papers "neural networks" --open-access --fields title,abstract,tldr
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
@@ -160,8 +160,8 @@ def authors(
     """Search for authors by name.
 
     Examples:
-        s2 search authors "Yann LeCun" --limit 5
-        s2 search authors "Geoffrey Hinton" --fields name,hIndex,paperCount
+        s2cli search authors "Yann LeCun" --limit 5
+        s2cli search authors "Geoffrey Hinton" --fields name,hIndex,paperCount
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, AUTHOR_FIELDS_DEFAULT, AUTHOR_FIELDS_FULL)

@@ -50,8 +50,8 @@ def get(
     """Get an author by ID.
 
     Examples:
-        s2 author get 1741101
-        s2 author get 1741101 --fields name,hIndex,citationCount,affiliations
+        s2cli author get 1741101
+        s2cli author get 1741101 --fields name,hIndex,citationCount,affiliations
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, AUTHOR_FIELDS_DEFAULT, AUTHOR_FIELDS_FULL)
@@ -100,8 +100,8 @@ def papers(
     """Get papers by an author.
 
     Examples:
-        s2 author papers 1741101 --limit 20
-        s2 author papers 1741101 --fields title,year,venue,citationCount
+        s2cli author papers 1741101 --limit 20
+        s2cli author papers 1741101 --fields title,year,venue,citationCount
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)

@@ -58,8 +58,8 @@ def for_paper(
     """Get recommendations based on a single paper.
 
     Examples:
-        s2 recommend for-paper 649def34f8be52c8b66281af98ae884c09aef38b
-        s2 recommend for-paper arXiv:1706.03762 --fields title,tldr,year --limit 5
+        s2cli recommend for-paper 649def34f8be52c8b66281af98ae884c09aef38b
+        s2cli recommend for-paper arXiv:1706.03762 --fields title,tldr,year --limit 5
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
@@ -116,8 +116,8 @@ def for_papers(
     """Get recommendations based on multiple papers.
 
     Examples:
-        s2 recommend for-papers arXiv:1706.03762 arXiv:2103.14030 --limit 5
-        s2 recommend for-papers arXiv:1706.03762 arXiv:2103.14030 --fields title,tldr
+        s2cli recommend for-papers arXiv:1706.03762 arXiv:2103.14030 --limit 5
+        s2cli recommend for-papers arXiv:1706.03762 arXiv:2103.14030 --fields title,tldr
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)

@@ -51,9 +51,9 @@ def get(
     - ACL: ACL:P18-1234
 
     Examples:
-        s2 paper get 10.1038/nature12373
-        s2 paper get arXiv:2103.14030 --fields title,abstract,tldr
-        s2 paper get arXiv:1706.03762 -f record
+        s2cli paper get 10.1038/nature12373
+        s2cli paper get arXiv:2103.14030 --fields title,abstract,tldr
+        s2cli paper get arXiv:1706.03762 -f record
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
@@ -104,8 +104,8 @@ def citations(
     """Get papers that cite this paper.
 
     Examples:
-        s2 paper citations 10.1038/nature12373 --limit 20
-        s2 paper citations arXiv:1706.03762 --fields title,year,citationCount
+        s2cli paper citations 10.1038/nature12373 --limit 20
+        s2cli paper citations arXiv:1706.03762 --fields title,year,citationCount
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
@@ -154,8 +154,8 @@ def references(
     """Get papers this paper references.
 
     Examples:
-        s2 paper references 10.1038/nature12373 --limit 20
-        s2 paper references arXiv:1706.03762 --fields title,year
+        s2cli paper references 10.1038/nature12373 --limit 20
+        s2cli paper references arXiv:1706.03762 --fields title,year
     """
     client = get_client(resolve_api_key(api_key))
     field_list = parse_fields(fields, PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL)
