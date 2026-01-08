@@ -7,6 +7,9 @@ description: Search and retrieve academic papers, authors, citations, and refere
 
 This skill provides access to the Semantic Scholar academic database via the `s2cli` command-line tool.
 
+- **Repository**: https://github.com/mhalle/s2cli
+- **Latest skill**: https://github.com/mhalle/s2cli/releases/latest/download/s2cli.skill
+
 ## Installation
 
 ### Prerequisites
@@ -219,12 +222,40 @@ s2cli recommend for-paper arXiv:1706.03762 --fields title,abstract,tldr --limit 
 
 Use `--quiet` to suppress error messages when scripting.
 
-## API Key
+## Configuration
 
-For higher rate limits, set `S2_API_KEY` environment variable or create a `.env` file:
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `S2_API_KEY` | Semantic Scholar API key for higher rate limits |
+| `S2_OUTPUT_FORMAT` | Default output format: `json`, `jsonl`, `csv`, or `record` |
+
+### Using a .env File
+
+Create a `.env` file in your working directory:
 
 ```bash
-export S2_API_KEY=your-api-key
+# Semantic Scholar API Key
+# Get one at: https://www.semanticscholar.org/product/api
+S2_API_KEY=your-api-key
+
+# Default output format
+S2_OUTPUT_FORMAT=json
 ```
 
-Get an API key at: https://www.semanticscholar.org/product/api
+The CLI automatically loads `.env` from the current directory.
+
+### API Key
+
+An API key is optional but recommended for:
+- Higher rate limits
+- Access to additional features
+
+Get a free API key at: https://www.semanticscholar.org/product/api
+
+You can also pass the key per-command:
+
+```bash
+s2cli paper get arXiv:1706.03762 --api-key your-api-key
+```
