@@ -14,9 +14,7 @@ def get_client(api_key: str | None = None) -> SemanticScholar:
     Uses caching to reuse the same client within a session.
     """
     key = get_api_key(api_key)
-    if key:
-        return SemanticScholar(api_key=key)
-    return SemanticScholar()
+    return SemanticScholar(api_key=key, retry=False)
 
 
 # Default field sets for different entity types
