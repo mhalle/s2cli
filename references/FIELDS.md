@@ -25,7 +25,7 @@
 
 ### Default Paper Fields
 
-When no `--fields` specified: `paperId`, `title`, `year`, `authors`, `citationCount`
+When no `--fields` specified: `paperId`, `externalIds`, `title`, `year`, `authors`, `citationCount`
 
 ### Publication Types
 

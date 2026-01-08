@@ -20,7 +20,7 @@ def get_client(api_key: str | None = None) -> SemanticScholar:
 
 
 # Default field sets for different entity types
-PAPER_FIELDS_DEFAULT = ["paperId", "title", "year", "authors", "citationCount"]
+PAPER_FIELDS_DEFAULT = ["paperId", "externalIds", "title", "year", "authors", "citationCount"]
 PAPER_FIELDS_FULL = [
     "paperId",
     "externalIds",
