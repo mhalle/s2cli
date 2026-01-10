@@ -22,6 +22,29 @@ def is_rate_limit_error(e: Exception) -> bool:
     return "429" in err_str or "rate" in err_str.lower()
 
 
+def is_connection_error(e: Exception) -> bool:
+    """Check if an exception is a connection error."""
+    err_str = str(e)
+    return any(x in err_str for x in ["ConnectionRefusedError", "ConnectionError", "TimeoutError"])
+
+
+def format_api_error(e: Exception) -> str:
+    """Format an API exception into a user-friendly message."""
+    if is_rate_limit_error(e):
+        return "Rate limited. Wait a moment and retry, or set S2_API_KEY."
+    if is_connection_error(e):
+        return "Connection failed. Check your network or try again later."
+    # Strip common wrapper noise
+    err_str = str(e)
+    if "RetryError" in err_str:
+        # Extract the actual error from RetryError wrapper
+        if "ConnectionRefusedError" in err_str:
+            return "Connection refused. The API may be unavailable."
+        if "TimeoutError" in err_str:
+            return "Request timed out. Try again later."
+    return str(e)
+
+
 class OutputFormat(str, Enum):
     json = "json"
     jsonl = "jsonl"

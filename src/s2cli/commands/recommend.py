@@ -16,6 +16,7 @@ from ..options import (
     FormatOption,
     OutputFormat,
     QuietOption,
+    format_api_error,
     is_rate_limit_error,
     resolve_api_key,
     resolve_format,
@@ -79,10 +80,7 @@ def for_paper(
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            if is_rate_limit_error(e):
-                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
-            else:
-                print(f"Error: {e}", file=sys.stderr)
+            print(f"Error: {format_api_error(e)}", file=sys.stderr)
         raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
 
 
@@ -140,8 +138,5 @@ def for_papers(
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            if is_rate_limit_error(e):
-                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
-            else:
-                print(f"Error: {e}", file=sys.stderr)
+            print(f"Error: {format_api_error(e)}", file=sys.stderr)
         raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
