@@ -35,7 +35,8 @@ def main(
         print(f"s2cli version {__version__}")
         raise typer.Exit()
     if ctx.invoked_subcommand is None:
-        raise typer.Exit(ctx.get_help())
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
 
 # Register subcommands

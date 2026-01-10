@@ -127,7 +127,10 @@ def papers(
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
+            if "429" in str(e) or "ConnectionRefusedError" in str(e):
+                print("Error: Rate limited by API. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
         raise typer.Exit(3)
 
 
@@ -174,5 +177,8 @@ def authors(
         print_output(authors_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
+            if "429" in str(e) or "ConnectionRefusedError" in str(e):
+                print("Error: Rate limited by API. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
         raise typer.Exit(3)
