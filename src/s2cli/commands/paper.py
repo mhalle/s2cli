@@ -8,11 +8,15 @@ import typer
 
 from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields
 from ..options import (
+    EXIT_API_ERROR,
+    EXIT_NOT_FOUND,
+    EXIT_RATE_LIMITED,
     PAPER_FIELDS_HELP,
     ApiKeyOption,
     FormatOption,
     OutputFormat,
     QuietOption,
+    is_rate_limit_error,
     resolve_api_key,
     resolve_format,
 )
@@ -66,11 +70,16 @@ def get(
         else:
             if not quiet:
                 print(f"Paper not found: {paper_id}", file=sys.stderr)
-            raise typer.Exit(3)
+            raise typer.Exit(EXIT_NOT_FOUND)
+    except typer.Exit:
+        raise
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
 
 
 @app.command()
@@ -119,8 +128,11 @@ def citations(
         print_output(papers, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
 
 
 @app.command()
@@ -169,5 +181,8 @@ def references(
         print_output(papers, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)

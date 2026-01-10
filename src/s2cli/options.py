@@ -8,6 +8,20 @@ import typer
 from .config import get_api_key, get_default_format
 
 
+# Exit codes
+EXIT_SUCCESS = 0
+EXIT_NOT_FOUND = 1      # Resource not found (specific ID lookup)
+EXIT_INPUT_ERROR = 2    # Invalid input, missing arguments, file not found
+EXIT_API_ERROR = 3      # API error (non-retriable)
+EXIT_RATE_LIMITED = 4   # Rate limited (retriable)
+
+
+def is_rate_limit_error(e: Exception) -> bool:
+    """Check if an exception is a rate limit error."""
+    err_str = str(e)
+    return "429" in err_str or "rate" in err_str.lower()
+
+
 class OutputFormat(str, Enum):
     json = "json"
     jsonl = "jsonl"

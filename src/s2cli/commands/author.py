@@ -16,11 +16,15 @@ from ..client import (
 )
 from ..options import (
     AUTHOR_FIELDS_HELP,
+    EXIT_API_ERROR,
+    EXIT_NOT_FOUND,
+    EXIT_RATE_LIMITED,
     PAPER_FIELDS_HELP,
     ApiKeyOption,
     FormatOption,
     OutputFormat,
     QuietOption,
+    is_rate_limit_error,
     resolve_api_key,
     resolve_format,
 )
@@ -64,11 +68,16 @@ def get(
         else:
             if not quiet:
                 print(f"Author not found: {author_id}", file=sys.stderr)
-            raise typer.Exit(3)
+            raise typer.Exit(EXIT_NOT_FOUND)
+    except typer.Exit:
+        raise
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
 
 
 @app.command()
@@ -114,5 +123,8 @@ def papers(
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)

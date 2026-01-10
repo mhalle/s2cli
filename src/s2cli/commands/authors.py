@@ -10,10 +10,14 @@ from ..client import AUTHOR_FIELDS_DEFAULT, AUTHOR_FIELDS_FULL, get_client, pars
 from ..input import parse_ids_from_stdin
 from ..options import (
     AUTHOR_FIELDS_HELP,
+    EXIT_API_ERROR,
+    EXIT_INPUT_ERROR,
+    EXIT_RATE_LIMITED,
     ApiKeyOption,
     FormatOption,
     OutputFormat,
     QuietOption,
+    is_rate_limit_error,
     resolve_api_key,
     resolve_format,
 )
@@ -87,14 +91,14 @@ def get(
     if file:
         if not file.exists():
             print(f"Error: File not found: {file}", file=sys.stderr)
-            raise typer.Exit(2)
+            raise typer.Exit(EXIT_INPUT_ERROR)
         ids.extend(line.strip() for line in file.read_text().splitlines() if line.strip())
     if stdin:
         ids.extend(parse_ids_from_stdin(id_field))
 
     if not ids:
         print("Error: No author IDs provided", file=sys.stderr)
-        raise typer.Exit(2)
+        raise typer.Exit(EXIT_INPUT_ERROR)
 
     try:
         # Always include externalIds to suppress false "not found" warnings
@@ -110,5 +114,8 @@ def get(
         print_output(authors, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
-            print(f"Error: {e}", file=sys.stderr)
-        raise typer.Exit(3)
+            if is_rate_limit_error(e):
+                print("Error: Rate limited. Wait a moment and retry, or set S2_API_KEY.", file=sys.stderr)
+            else:
+                print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
