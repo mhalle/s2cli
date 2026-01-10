@@ -7,11 +7,22 @@ import typer
 from . import __version__
 from .commands import author, authors, paper, papers, recommend, search
 
+EXIT_CODES_HELP = (
+    "[dim]Exit codes:[/dim] "
+    "[cyan]0[/cyan]=success, "
+    "[cyan]1[/cyan]=not found, "
+    "[cyan]2[/cyan]=input error, "
+    "[cyan]3[/cyan]=API error, "
+    "[cyan]4[/cyan]=rate limited (retriable)"
+)
+
 app = typer.Typer(
     name="s2cli",
     help="Semantic Scholar CLI - Query academic papers, authors, and citations.",
     no_args_is_help=True,
     context_settings={"help_option_names": ["-h", "--help"]},
+    epilog=EXIT_CODES_HELP,
+    rich_markup_mode="rich",
 )
 
 
