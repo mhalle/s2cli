@@ -22,26 +22,53 @@ def is_rate_limit_error(e: Exception) -> bool:
     return "429" in err_str or "rate" in err_str.lower()
 
 
-def is_connection_error(e: Exception) -> bool:
-    """Check if an exception is a connection error."""
+def is_retriable_error(e: Exception) -> bool:
+    """Check if an exception is retriable (transient network/server issue)."""
     err_str = str(e)
-    return any(x in err_str for x in ["ConnectionRefusedError", "ConnectionError", "TimeoutError"])
+    type_name = type(e).__name__
+    # Check exception type names
+    if any(x in type_name for x in ["Timeout", "Gateway", "Connection"]):
+        return True
+    # Check error message patterns
+    return any(x in err_str for x in [
+        "ConnectionRefusedError",
+        "ConnectionError",
+        "TimeoutError",
+        "GatewayTimeout",
+        "Network error",
+    ])
 
 
 def format_api_error(e: Exception) -> str:
     """Format an API exception into a user-friendly message."""
+    err_str = str(e)
+    type_name = type(e).__name__
+
     if is_rate_limit_error(e):
         return "Rate limited. Wait a moment and retry, or set S2_API_KEY."
-    if is_connection_error(e):
+
+    # Gateway/server errors
+    if "GatewayTimeout" in type_name or "Gateway" in err_str:
+        return "API gateway timeout. The server may be overloaded, try again later."
+    if "Network error" in err_str:
+        return "API network error. The server may be overloaded, try again later."
+
+    # Connection errors
+    if "ConnectionRefusedError" in err_str:
+        return "Connection refused. The API may be unavailable."
+    if "ConnectionError" in err_str or "Connection" in type_name:
         return "Connection failed. Check your network or try again later."
-    # Strip common wrapper noise
-    err_str = str(e)
+    if "TimeoutError" in err_str or "Timeout" in type_name:
+        return "Request timed out. Try again later."
+
+    # Strip RetryError wrapper noise
     if "RetryError" in err_str:
-        # Extract the actual error from RetryError wrapper
         if "ConnectionRefusedError" in err_str:
             return "Connection refused. The API may be unavailable."
         if "TimeoutError" in err_str:
             return "Request timed out. Try again later."
+        return "Request failed after retries. Try again later."
+
     return str(e)
 
 

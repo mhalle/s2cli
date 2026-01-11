@@ -1,12 +1,11 @@
 """Paper commands - query individual papers."""
 
 import sys
-from itertools import islice
 from typing import Annotated, Optional
 
 import typer
 
-from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields
+from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields, safe_iterate
 from ..options import (
     EXIT_API_ERROR,
     EXIT_NOT_FOUND,
@@ -121,8 +120,9 @@ def citations(
     try:
         results = client.get_paper_citations(paper_id, fields=field_list, limit=1000)
         # Results are Citation objects with a 'paper' attribute
-        # Only take the number we actually want
-        papers = [c.paper for c in islice(results, limit) if c.paper]
+        # Only take the number we actually want (safe_iterate handles empty results bug)
+        citations = safe_iterate(results, limit)
+        papers = [c.paper for c in citations if c.paper]
         print_output(papers, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
@@ -171,8 +171,9 @@ def references(
     try:
         results = client.get_paper_references(paper_id, fields=field_list, limit=1000)
         # Results are Reference objects with a 'paper' attribute
-        # Only take the number we actually want
-        papers = [r.paper for r in islice(results, limit) if r.paper]
+        # Only take the number we actually want (safe_iterate handles empty results bug)
+        refs = safe_iterate(results, limit)
+        papers = [r.paper for r in refs if r.paper]
         print_output(papers, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:

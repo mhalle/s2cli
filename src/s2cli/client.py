@@ -56,6 +56,30 @@ AUTHOR_FIELDS_FULL = [
 ]
 
 
+def safe_iterate(results, limit: int):
+    """Safely iterate over paginated results, handling empty result bugs.
+
+    The semanticscholar library has a bug where iterating over empty results
+    raises a RetryError/ConnectionRefusedError instead of returning empty.
+    This wrapper catches that and returns an empty list.
+    """
+    items = []
+    try:
+        for item in results:
+            items.append(item)
+            if len(items) >= limit:
+                break
+    except Exception as e:
+        err_str = str(e)
+        # Library bug: empty results cause RetryError with ConnectionRefusedError
+        if "RetryError" in err_str or "ConnectionRefusedError" in err_str:
+            # Check if we got any results before the error
+            if not items:
+                return []  # Likely empty results, not a real connection error
+        raise  # Re-raise other errors or if we had partial results
+    return items
+
+
 def parse_fields(
     fields_str: str | None,
     default: list[str],

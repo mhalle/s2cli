@@ -1,7 +1,6 @@
 """Author commands - query individual authors."""
 
 import sys
-from itertools import islice
 from typing import Annotated, Optional
 
 import typer
@@ -13,6 +12,7 @@ from ..client import (
     PAPER_FIELDS_FULL,
     get_client,
     parse_fields,
+    safe_iterate,
 )
 from ..options import (
     AUTHOR_FIELDS_HELP,
@@ -117,7 +117,7 @@ def papers(
     try:
         results = client.get_author_papers(author_id, fields=field_list, limit=1000)
         # Only take the number we actually want
-        papers_list = list(islice(results, limit))
+        papers_list = safe_iterate(results, limit)
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:

@@ -1,12 +1,11 @@
 """Recommend commands - get paper recommendations."""
 
 import sys
-from itertools import islice
 from typing import Annotated, Optional
 
 import typer
 
-from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields
+from ..client import PAPER_FIELDS_DEFAULT, PAPER_FIELDS_FULL, get_client, parse_fields, safe_iterate
 from ..options import (
     EXIT_API_ERROR,
     EXIT_RATE_LIMITED,
@@ -76,7 +75,7 @@ def for_paper(
             limit=limit,
             pool_from=pool,
         )
-        papers_list = list(islice(results, limit))
+        papers_list = safe_iterate(results, limit)
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
@@ -134,7 +133,7 @@ def for_papers(
             limit=limit,
             pool_from=pool,
         )
-        papers_list = list(islice(results, limit))
+        papers_list = safe_iterate(results, limit)
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
         if not quiet:
