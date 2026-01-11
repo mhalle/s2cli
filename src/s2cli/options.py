@@ -22,6 +22,17 @@ def is_rate_limit_error(e: Exception) -> bool:
     return "429" in err_str or "rate" in err_str.lower()
 
 
+def is_empty_results_error(e: Exception) -> bool:
+    """Check if an exception is the empty results bug from semanticscholar library.
+
+    The library has a bug where empty results (API returns {"total": 0})
+    causes a RetryError/ConnectionRefusedError instead of returning empty.
+    """
+    err_str = str(e)
+    return ("RetryError" in err_str or "ConnectionRefusedError" in err_str) and \
+           "ConnectionRefused" in err_str
+
+
 def is_retriable_error(e: Exception) -> bool:
     """Check if an exception is retriable (transient network/server issue)."""
     err_str = str(e)

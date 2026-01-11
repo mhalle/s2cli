@@ -25,6 +25,7 @@ from ..options import (
     OutputFormat,
     QuietOption,
     format_api_error,
+    is_empty_results_error,
     is_rate_limit_error,
     resolve_api_key,
     resolve_format,
@@ -120,6 +121,10 @@ def papers(
         papers_list = safe_iterate(results, limit)
         print_output(papers_list, fmt=output_format, fields=field_list if fields else None)
     except Exception as e:
+        # Handle semanticscholar library bug where empty results cause connection error
+        if is_empty_results_error(e):
+            print_output([], fmt=output_format, fields=field_list if fields else None)
+            return
         if not quiet:
             print(f"Error: {format_api_error(e)}", file=sys.stderr)
         raise typer.Exit(EXIT_RATE_LIMITED if is_rate_limit_error(e) else EXIT_API_ERROR)
