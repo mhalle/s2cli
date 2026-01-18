@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 
 from . import __version__
-from .commands import author, authors, paper, papers, recommend, search
+from .commands import author, authors, citetree, paper, papers, recommend, search
 
 EXIT_CODES_HELP = (
     "[dim]Exit codes:[/dim] "
@@ -57,6 +57,7 @@ app.add_typer(author.app, name="author", help="Query individual authors")
 app.add_typer(authors.app, name="authors", help="Bulk author operations")
 app.add_typer(search.app, name="search", help="Search papers or authors")
 app.add_typer(recommend.app, name="recommend", help="Get paper recommendations")
+app.add_typer(citetree.app, name="citetree", help="Build and manage citation trees")
 
 
 if __name__ == "__main__":
