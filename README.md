@@ -35,6 +35,40 @@ Set your API key via environment variable or `.env` file:
 export S2_API_KEY=your-api-key
 ```
 
+## Citation Trees
+
+Build and maintain local SQLite databases of citation networks:
+
+```bash
+# Add papers and crawl their citations
+s2cli citetree add PMID:12345678 --db papers.db --depth 2
+
+# Use a YAML config file
+s2cli citetree add --config citetree.yaml --db papers.db
+
+# CLI flags override config settings
+s2cli citetree add --config citetree.yaml --db papers.db --depth 1
+
+# Check database status
+s2cli citetree status --db papers.db
+```
+
+### YAML Config Format
+
+```yaml
+# citetree.yaml
+depth: 2
+direction: citations  # or "references"
+limit: 1000
+influential_only: false
+
+papers:
+  - id: "PMID:12345678"
+    title: "Paper title (for documentation)"
+  - id: "arXiv:1706.03762"
+  - "DOI:10.1234/example"  # plain string also valid
+```
+
 ## Output Formats
 
 - `json` - JSON object/array (default)
