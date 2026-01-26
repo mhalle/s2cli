@@ -25,6 +25,7 @@ from ..options import (
     is_rate_limit_error,
     resolve_api_key,
 )
+from ..yaml_config import CitetreeConfig, load_config
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -398,9 +399,9 @@ def fetch_missing_papers(
 @app.command()
 def add(
     paper_ids: Annotated[
-        list[str],
+        Optional[list[str]],
         typer.Argument(help=f"Paper IDs to use as roots. {ID_FORMATS_HELP}"),
-    ],
+    ] = None,
     db: Annotated[
         Path,
         typer.Option(
@@ -408,37 +409,45 @@ def add(
             "-d",
             help="SQLite database path",
         ),
-    ],
+    ] = None,
+    config: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--config",
+            "-c",
+            help="YAML config file with papers and settings",
+        ),
+    ] = None,
     depth: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             "--depth",
             help="Maximum traversal depth",
         ),
-    ] = 2,
+    ] = None,
     direction: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--direction",
             help="Traversal direction: citations (up, default) or references (down)",
         ),
-    ] = "citations",
+    ] = None,
     limit: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             "--limit",
             "-l",
             help="Maximum citations/references per paper (API max: 1000)",
         ),
-    ] = 1000,
+    ] = None,
     influential_only: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
             "--influential-only",
             "-I",
             help="Only store influential edges (always traverses influential only)",
         ),
-    ] = False,
+    ] = None,
     quiet: QuietOption = False,
     api_key: ApiKeyOption = None,
 ):
@@ -453,8 +462,43 @@ def add(
     Examples:
         s2cli citetree add PMID:12345678 --db papers.db --depth 2
         s2cli citetree add arXiv:1706.03762 --db papers.db --direction references
+        s2cli citetree add --config citetree.yaml --db papers.db
     """
-    if direction not in ("citations", "references"):
+    # Load config file if provided
+    cfg = CitetreeConfig()
+    if config:
+        if not config.exists():
+            print(f"Config file not found: {config}", file=sys.stderr)
+            raise typer.Exit(EXIT_INPUT_ERROR)
+        try:
+            cfg = load_config(config)
+            if not quiet:
+                print(f"Loaded config from {config}", file=sys.stderr)
+        except Exception as e:
+            print(f"Error loading config: {e}", file=sys.stderr)
+            raise typer.Exit(EXIT_INPUT_ERROR)
+
+    # Merge CLI args with config (CLI takes precedence)
+    final_depth = depth if depth is not None else cfg.depth
+    final_direction = direction if direction is not None else cfg.direction
+    final_limit = limit if limit is not None else cfg.limit
+    final_influential_only = influential_only if influential_only is not None else cfg.influential_only
+
+    # Combine papers from config and CLI args
+    final_paper_ids = list(cfg.papers)
+    if paper_ids:
+        final_paper_ids.extend(paper_ids)
+
+    # Validate we have required inputs
+    if not final_paper_ids:
+        print("Error: No paper IDs provided. Use positional args or --config with papers list.", file=sys.stderr)
+        raise typer.Exit(EXIT_INPUT_ERROR)
+
+    if db is None:
+        print("Error: --db is required", file=sys.stderr)
+        raise typer.Exit(EXIT_INPUT_ERROR)
+
+    if final_direction not in ("citations", "references"):
         print(f"Error: direction must be 'citations' or 'references'", file=sys.stderr)
         raise typer.Exit(EXIT_INPUT_ERROR)
 
@@ -463,11 +507,11 @@ def add(
 
     if not quiet:
         print(f"Database: {db}", file=sys.stderr)
-        print(f"Adding {len(paper_ids)} root(s) with depth {depth} ({direction})", file=sys.stderr)
+        print(f"Adding {len(final_paper_ids)} root(s) with depth {final_depth} ({final_direction})", file=sys.stderr)
 
     # First, resolve paper IDs to S2 paper IDs
     resolved_roots = []
-    for pid in paper_ids:
+    for pid in final_paper_ids:
         try:
             paper = client.get_paper(pid, fields=["paperId"])
             if paper and paper.paperId:
@@ -491,8 +535,8 @@ def add(
             {
                 "paper_id": s2_id,
                 "original_id": original_id,
-                "depth": depth,
-                "direction": direction,
+                "depth": final_depth,
+                "direction": final_direction,
                 "added_at": datetime.now().isoformat(),
             },
             pk="paper_id",
@@ -500,12 +544,12 @@ def add(
 
     # Crawl tree
     if not quiet:
-        print(f"\nCrawling {direction} tree...", file=sys.stderr)
+        print(f"\nCrawling {final_direction} tree...", file=sys.stderr)
 
     try:
         root_s2_ids = [s2_id for _, s2_id in resolved_roots]
         all_papers, edges_added = crawl_tree(
-            client, database, root_s2_ids, depth, direction, limit, influential_only, quiet
+            client, database, root_s2_ids, final_depth, final_direction, final_limit, final_influential_only, quiet
         )
     except Exception as e:
         if is_rate_limit_error(e):
