@@ -509,20 +509,20 @@ def add(
         print(f"Database: {db}", file=sys.stderr)
         print(f"Adding {len(final_paper_ids)} root(s) with depth {final_depth} ({final_direction})", file=sys.stderr)
 
-    # First, resolve paper IDs to S2 paper IDs
+    # Resolve paper IDs to S2 paper IDs using batch API
     resolved_roots = []
-    for pid in final_paper_ids:
-        try:
-            paper = client.get_paper(pid, fields=["paperId"])
+    try:
+        papers = client.get_papers(final_paper_ids, fields=["paperId", "externalIds"])
+        for pid, paper in zip(final_paper_ids, papers):
             if paper and paper.paperId:
                 resolved_roots.append((pid, paper.paperId))
                 if not quiet:
                     print(f"Resolved {pid} -> {paper.paperId}", file=sys.stderr)
             else:
                 print(f"Warning: Could not resolve {pid}", file=sys.stderr)
-        except Exception as e:
-            print(f"Error resolving {pid}: {format_api_error(e)}", file=sys.stderr)
-            raise typer.Exit(EXIT_API_ERROR)
+    except Exception as e:
+        print(f"Error resolving paper IDs: {format_api_error(e)}", file=sys.stderr)
+        raise typer.Exit(EXIT_API_ERROR)
 
     if not resolved_roots:
         print("No valid paper IDs provided", file=sys.stderr)
