@@ -275,6 +275,7 @@ wheels = [
 name = "s2cli"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "rich" },
@@ -285,6 +286,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.25.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.0.0" },
