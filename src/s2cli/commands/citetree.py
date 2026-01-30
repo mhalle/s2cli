@@ -33,7 +33,7 @@ S2_API_BASE = "https://api.semanticscholar.org/graph/v1"
 app = typer.Typer(no_args_is_help=True)
 
 # Fields to fetch for papers in the tree
-REFTREE_PAPER_FIELDS = [
+CITETREE_PAPER_FIELDS = [
     "paperId",
     "externalIds",
     "title",
@@ -45,6 +45,7 @@ REFTREE_PAPER_FIELDS = [
     "referenceCount",
     "influentialCitationCount",
     "fieldsOfStudy",
+    "openAccessPdf",
 ]
 
 # Fields to request for citations/references (to get isInfluential and intents)
@@ -325,6 +326,11 @@ def paper_to_row(paper) -> dict:
     if external_ids:
         external_ids = json.dumps(external_ids)
 
+    open_access_pdf = raw.get("openAccessPdf")
+    open_access_url = None
+    if open_access_pdf and isinstance(open_access_pdf, dict):
+        open_access_url = open_access_pdf.get("url")
+
     return {
         "paper_id": raw.get("paperId"),
         "title": raw.get("title"),
@@ -337,6 +343,7 @@ def paper_to_row(paper) -> dict:
         "influential_citation_count": raw.get("influentialCitationCount"),
         "fields_of_study": fields_of_study,
         "external_ids": external_ids,
+        "open_access_url": open_access_url,
     }
 
 
@@ -702,7 +709,7 @@ def fetch_missing_papers(
         # Retry with exponential backoff for rate limits
         for attempt in range(3):
             try:
-                papers = client.get_papers(batch, fields=REFTREE_PAPER_FIELDS)
+                papers = client.get_papers(batch, fields=CITETREE_PAPER_FIELDS)
                 rows = []
                 for paper in papers:
                     if paper:
@@ -1013,3 +1020,91 @@ def status(
         print(f"  Edges: {edges_count} (from batch API)")
     else:
         print(f"  Edges: {edges_count} ({influential_count} influential)")
+
+
+@app.command()
+def refresh(
+    db: Annotated[
+        Path,
+        typer.Option(
+            "--db",
+            "-d",
+            help="SQLite database path",
+        ),
+    ],
+    quiet: QuietOption = False,
+    api_key: ApiKeyOption = None,
+):
+    """Re-fetch paper details for all papers in the database.
+
+    Use this to update papers with new fields (e.g., openAccessPdf) without
+    re-crawling the citation tree. Handles schema changes by adding new columns.
+
+    Examples:
+        s2cli citetree refresh --db papers.db
+    """
+    if not db.exists():
+        print(f"Database not found: {db}", file=sys.stderr)
+        raise typer.Exit(EXIT_INPUT_ERROR)
+
+    database = sqlite_utils.Database(db)
+
+    if "papers" not in database.table_names():
+        print("No papers table found", file=sys.stderr)
+        raise typer.Exit(EXIT_INPUT_ERROR)
+
+    # Get all paper IDs
+    paper_ids = [row["paper_id"] for row in database["papers"].rows_where(select="paper_id")]
+
+    if not paper_ids:
+        print("No papers in database", file=sys.stderr)
+        return
+
+    if not quiet:
+        print(f"Refreshing {len(paper_ids)} papers...", file=sys.stderr)
+
+    client = get_client(api_key)
+
+    batch_size = 500
+    fetched = 0
+    failed = []
+
+    for i in range(0, len(paper_ids), batch_size):
+        batch = paper_ids[i : i + batch_size]
+
+        # Small delay between batches to avoid rate limits
+        if i > 0:
+            time.sleep(1)
+
+        # Retry with exponential backoff for rate limits
+        for attempt in range(3):
+            try:
+                papers = client.get_papers(batch, fields=CITETREE_PAPER_FIELDS)
+                rows = []
+                for paper in papers:
+                    if paper:
+                        rows.append(paper_to_row(paper))
+
+                if rows:
+                    # Use alter=True to add any new columns automatically
+                    database["papers"].upsert_all(rows, pk="paper_id", alter=True)
+                    fetched += len(rows)
+
+                if not quiet:
+                    print(f"  Refreshed {fetched}/{len(paper_ids)} papers", file=sys.stderr)
+                break  # Success, exit retry loop
+
+            except Exception as e:
+                # Retry with backoff for any error (rate limits, connection errors, etc.)
+                wait_time = (attempt + 1) * 5
+                if not quiet:
+                    print(f"  Batch failed ({type(e).__name__}), retrying in {wait_time}s...", file=sys.stderr)
+                time.sleep(wait_time)
+                if attempt == 2:  # Last attempt failed
+                    failed.extend(batch)
+
+    if failed and not quiet:
+        print(f"  Warning: {len(failed)} papers could not be refreshed", file=sys.stderr)
+
+    if not quiet:
+        print(f"\nDone! Refreshed {fetched} papers.", file=sys.stderr)
