@@ -21,18 +21,12 @@ tables:
       abstract: Abstract
       tldr: TL;DR summary
       year: Year
-      authors:
-        type: json
-        description: Authors
+      authors: Authors (JSON)
       citation_count: Citations
       reference_count: References
       influential_citation_count: Influential citations
-      fields_of_study:
-        type: json
-        description: Fields of study
-      external_ids:
-        type: json
-        description: External IDs
+      fields_of_study: Fields (JSON)
+      external_ids: External IDs (JSON)
       open_access_url: Open access PDF URL
 
   paper_references:
@@ -44,9 +38,7 @@ tables:
       citing_id: Citing paper
       cited_id: Cited paper
       is_influential: Influential (1/0/NULL)
-      intents:
-        type: json
-        description: Intents
+      intents: Intents (JSON)
 
   exploration_roots:
     title: Seed Papers
