@@ -1,0 +1,53 @@
+title: Citation Tree Database
+description_html: |
+  <p>Citation network built with <a href="https://github.com/mhalle/s2cli">s2cli</a>
+  from Semantic Scholar data.</p>
+
+source: Semantic Scholar API
+source_url: https://www.semanticscholar.org/
+
+tables:
+  papers:
+    title: Papers
+    description_html: |
+      <p>Academic papers with metadata from Semantic Scholar.</p>
+      <p>Semantic Scholar URL: <code>https://www.semanticscholar.org/paper/{paper_id}</code></p>
+    label_column: title
+    sort_desc: year
+    size: 50
+    columns:
+      paper_id: S2 paper ID
+      title: Title
+      abstract: Abstract
+      tldr: TL;DR summary
+      year: Year
+      authors: Authors (JSON)
+      citation_count: Citations
+      reference_count: References
+      influential_citation_count: Influential citations
+      fields_of_study: Fields (JSON)
+      external_ids: External IDs (JSON)
+      open_access_url: Open access PDF URL
+
+  paper_references:
+    title: Citation Edges
+    description_html: |
+      <p>Citation relationships between papers.</p>
+    size: 100
+    columns:
+      citing_id: Citing paper
+      cited_id: Cited paper
+      is_influential: Influential (1/0/NULL)
+      intents: Intents (JSON)
+
+  exploration_roots:
+    title: Seed Papers
+    description_html: |
+      <p>Root papers used as seeds for crawling.</p>
+    label_column: original_id
+    columns:
+      paper_id: S2 paper ID
+      original_id: Original ID
+      depth: Crawl depth
+      direction: Direction
+      added_at: Added timestamp
